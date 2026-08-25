@@ -12,17 +12,23 @@ import { colors, space, type } from '../theme';
 export default function PairScreen() {
   const [code, setCode] = useState('ORDIO-DEMO');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function pair() {
+    if (busy) return;
     setError('');
+    setBusy(true);
     try {
       const res = await fetch(`${API}/auth/device/pair`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activationCode: code, name: 'Caja 1', platform: 'android' }),
+        body: JSON.stringify({ activationCode: code.trim(), name: 'Caja 1', platform: 'android' }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? 'Error');
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.accessToken) {
+        const message = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
+        throw new Error(typeof message === 'string' ? message : 'No se pudo activar. Reintenta.');
+      }
       await saveSession('device', { accessToken: data.accessToken, refreshToken: data.refreshToken });
       const claims = decodeJwtPayload(data.accessToken);
       saveDeviceContext({
@@ -32,7 +38,9 @@ export default function PairScreen() {
       });
       router.replace('/pin');
     } catch (err) {
-      setError((err as Error).message);
+      setError((err as Error).message || 'No se pudo activar. Reintenta.');
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -58,7 +66,7 @@ export default function PairScreen() {
           autoCorrect={false}
           error={error}
         />
-        <Button label="Continuar" onPress={pair} />
+        <Button label={busy ? 'Activando…' : 'Continuar'} onPress={() => void pair()} disabled={busy} />
       </View>
     </Screen>
   );

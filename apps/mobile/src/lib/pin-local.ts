@@ -2,7 +2,7 @@ import * as Crypto from 'expo-crypto';
 import { getSecureItem, setSecureItem } from './secure-storage';
 
 function keyFor(userId: string) {
-  return `cashierPin:${userId}`;
+  return `cashier-pin.${userId}`;
 }
 
 export async function saveLocalPin(userId: string, pin: string) {

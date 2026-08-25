@@ -3,15 +3,23 @@
     "name": "ordio",
     "slug": "ordio",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/85c986f9-13ec-46ae-8771-d73a1c30faef"
+    },
     "orientation": "portrait",
     "platforms": ["ios", "android"],
     "icon": "./assets/images/icon.png",
     "scheme": "ordio",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "tech.dogix.ordio",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "tech.dogix.ordio",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

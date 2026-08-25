@@ -34,12 +34,20 @@ const REFRESH_KEY: Record<TokenKind, string> = {
 
 const inflight: Partial<Record<TokenKind, Promise<string | null>>> = {};
 
+function decodeBase64Url(part: string): string {
+  const padded = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=');
+  if (typeof globalThis.atob === 'function') return globalThis.atob(padded);
+  const BufferImpl = (globalThis as { Buffer?: { from(data: string, enc: string): { toString(enc: string): string } } })
+    .Buffer;
+  if (BufferImpl) return BufferImpl.from(padded, 'base64').toString('utf8');
+  throw new Error('base64');
+}
+
 export function decodeJwtPayload(token: string): JwtClaims | null {
   try {
     const part = token.split('.')[1];
-    if (!part || typeof globalThis.atob !== 'function') return null;
-    const padded = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=');
-    return JSON.parse(globalThis.atob(padded)) as JwtClaims;
+    if (!part) return null;
+    return JSON.parse(decodeBase64Url(part)) as JwtClaims;
   } catch {
     return null;
   }
@@ -173,10 +181,8 @@ export async function apiFetch(path: string, init?: RequestInit) {
   try {
     return await run(token);
   } catch (err) {
-    if (err instanceof Error && !(err instanceof NetworkError) && isNetworkError(err)) {
-      throw new NetworkError();
-    }
-    if (err instanceof TypeError) throw new NetworkError();
+    if (err instanceof NetworkError) throw err;
+    if (isNetworkError(err) || err instanceof TypeError) throw new NetworkError();
     const status = (err as { status?: number }).status;
     const message = String((err as Error)?.message ?? '');
     if (status === 401 || /invalid token|missing token|unauthorized/i.test(message)) {
@@ -186,6 +192,7 @@ export async function apiFetch(path: string, init?: RequestInit) {
         return await run(next);
       } catch (retryErr) {
         if ((retryErr as { status?: number }).status === 401) throw new AuthError();
+        if (isNetworkError(retryErr) || retryErr instanceof TypeError) throw new NetworkError();
         throw retryErr;
       }
     }

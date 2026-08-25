@@ -22,6 +22,7 @@ export default function PinScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -29,8 +30,8 @@ export default function PinScreen() {
         const token = await ensureAccessToken('device');
         if (!token) throw new Error();
         const res = await fetch(`${API}/catalog/snapshot`, { headers: { Authorization: `Bearer ${token}` } });
-        const data = await res.json();
-        if (!res.ok) throw new Error();
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data) throw new Error();
         const cashiers = data.cashiers ?? [];
         saveCachedCashiers(cashiers);
         saveCachedCatalog(parseCatalogSnapshot(data));
@@ -51,24 +52,29 @@ export default function PinScreen() {
       setError('La primera vez necesitas internet para entrar. Después la sesión queda en esta caja.');
       return;
     }
+    await goToSale();
+  }
+
+  async function goToSale() {
     const person = people.find((item) => item.id === selected);
     saveDeviceContext({ cashierUserId: selected!, cashierName: person?.displayName });
     router.replace('/sale');
   }
 
   async function enter() {
-    if (!selected) return;
+    if (!selected || busy) return;
     setError('');
-    const token = await ensureAccessToken('device');
-    if (!token) {
-      if (await hasStoredSession('device')) {
-        await enterOffline();
+    setBusy(true);
+    try {
+      const token = await ensureAccessToken('device');
+      if (!token) {
+        if (await hasStoredSession('device')) {
+          await enterOffline();
+          return;
+        }
+        setError('El dispositivo no está vinculado. Vuelve a activarlo.');
         return;
       }
-      setError('El dispositivo no está vinculado. Vuelve a activarlo.');
-      return;
-    }
-    try {
       const res = await fetch(`${API}/auth/pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -76,17 +82,28 @@ export default function PinScreen() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        if (data?.message === 'Invalid token' || data?.message === 'Device token required') {
+        const message = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
+        if (message === 'Invalid token' || message === 'Device token required') {
           await enterOffline();
+          return;
+        }
+        if (res.status >= 500 || !data) {
+          setError('No se pudo entrar. Reintenta.');
           return;
         }
         setError('PIN incorrecto');
         return;
       }
+      if (!data?.accessToken) {
+        setError('No se pudo entrar. Reintenta.');
+        return;
+      }
       await saveSession('cashier', { accessToken: data.accessToken, refreshToken: data.refreshToken });
-      await saveLocalPin(selected, pin);
-      const person = people.find((item) => item.id === selected);
-      saveDeviceContext({ cashierUserId: selected, cashierName: person?.displayName });
+      try {
+        await saveLocalPin(selected, pin);
+      } catch {
+        /* El PIN local no debe bloquear la entrada si el servidor ya aceptó. */
+      }
       try {
         const snap = await apiFetch('/catalog/snapshot');
         saveCachedCatalog(parseCatalogSnapshot(snap));
@@ -101,13 +118,15 @@ export default function PinScreen() {
       } catch {
         /* Catálogo y caja quedan los que ya se guardaron; se venden offline igual. */
       }
-      router.replace('/sale');
+      await goToSale();
     } catch (err) {
       if (isNetworkError(err) || err instanceof TypeError) {
         await enterOffline();
         return;
       }
-      setError((err as Error).message || 'No se pudo entrar');
+      setError('No se pudo entrar. Reintenta.');
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -190,7 +209,7 @@ export default function PinScreen() {
           secureTextEntry
           error={error || undefined}
         />
-        <Button label="Entrar" onPress={enter} />
+        <Button label={busy ? 'Entrando…' : 'Entrar'} onPress={() => void enter()} disabled={busy || !selected} />
       </View>
     </Screen>
   );

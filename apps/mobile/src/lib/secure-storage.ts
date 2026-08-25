@@ -37,26 +37,36 @@ function webDelete(key: string) {
   memory.delete(key);
 }
 
+/** Android SecureStore only allows [A-Za-z0-9._-]. */
+function nativeKey(key: string) {
+  return key.replace(/[^A-Za-z0-9._-]/g, '_');
+}
+
 export async function getSecureItem(key: string): Promise<string | null> {
+  const safe = nativeKey(key);
   if (!(await canUseNative())) {
-    return Platform.OS === 'web' ? webGet(key) : (memory.get(key) ?? null);
+    if (Platform.OS === 'web') return webGet(safe) ?? webGet(key);
+    return memory.get(safe) ?? memory.get(key) ?? null;
   }
-  return SecureStore.getItemAsync(key);
+  return SecureStore.getItemAsync(safe);
 }
 
 export async function setSecureItem(key: string, value: string): Promise<void> {
+  const safe = nativeKey(key);
   if (!(await canUseNative())) {
-    if (Platform.OS === 'web') webSet(key, value);
-    else memory.set(key, value);
+    if (Platform.OS === 'web') webSet(safe, value);
+    else memory.set(safe, value);
     return;
   }
-  await SecureStore.setItemAsync(key, value);
+  await SecureStore.setItemAsync(safe, value);
 }
 
 export async function deleteSecureItem(key: string): Promise<void> {
+  const safe = nativeKey(key);
   if (!(await canUseNative())) {
     webDelete(key);
+    webDelete(safe);
     return;
   }
-  await SecureStore.deleteItemAsync(key);
+  await SecureStore.deleteItemAsync(safe);
 }
