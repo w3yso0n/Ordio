@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f5f1;
+  --foreground: #191a18;
+  --surface: #ffffff;
+  --surface-secondary: #efeee9;
+  --muted: #676963;
+  --border: #dddcd6;
+  --brand: #f15a29;
+  --brand-pressed: #d94c20;
+  --brand-muted: #fde8e1;
+  --success: #187657;
+  --warning: #a96311;
+  --danger: #b42318;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-pressed: var(--brand-pressed);
+  --color-brand-muted: var(--brand-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141513;
+    --foreground: #f3f2ee;
+    --surface: #1c1d1a;
+    --surface-secondary: #262723;
+    --muted: #a8a9a3;
+    --border: #33342f;
+    --brand: #f15a29;
+    --brand-pressed: #ff6b3d;
+    --brand-muted: #3a241c;
+    --success: #3dba84;
+    --warning: #e0a04a;
+    --danger: #e85b52;
+  }
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--brand-muted);
+  color: var(--foreground);
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

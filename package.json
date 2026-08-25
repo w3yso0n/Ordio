@@ -1,0 +1,15 @@
+{
+  "name": "ordio",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "dev:backend": "pnpm build:shared && pnpm --filter @ordio/backend start:dev",
+    "dev:admin": "pnpm --filter @ordio/admin dev",
+    "dev:mobile": "pnpm --filter @ordio/mobile start",
+    "build:shared": "pnpm --filter @ordio/shared build",
+    "migration:run": "pnpm --filter @ordio/backend migration:run",
+    "seed": "pnpm --filter @ordio/backend seed",
+    "test:backend": "pnpm --filter @ordio/backend test",
+    "test:e2e": "pnpm --filter @ordio/backend test:e2e"
+  }
+}
