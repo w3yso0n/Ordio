@@ -278,6 +278,8 @@ export default function UsersPage() {
               onChange={(e) => setPin(e.target.value)}
               autoComplete="off"
               inputMode="numeric"
+              minLength={cashierEditingId ? undefined : 4}
+              required={!cashierEditingId}
             />
           </Field>
           <Field label="Sucursal">
