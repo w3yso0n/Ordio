@@ -312,12 +312,18 @@ export class AdminService {
     return { ok: true };
   }
 
+  private publicUser(user: User) {
+    const { passwordHash, pinHash, ...rest } = user;
+    return {
+      ...rest,
+      hasPin: Boolean(pinHash),
+      hasPassword: Boolean(passwordHash),
+    };
+  }
+
   async users() {
     const rows = await getTenantManager().find(User, { where: { deletedAt: IsNull() } });
-    return rows.map(({ passwordHash: _p, pinHash: _pin, ...rest }) => ({
-      ...rest,
-      hasPin: Boolean(_pin),
-    }));
+    return rows.map((row) => this.publicUser(row));
   }
 
   async upsertUser(
@@ -345,14 +351,44 @@ export class AdminService {
         `No se puede cambiar el rol de ${user.displayName}: el dueño no puede dejar de ser owner.`,
       );
     }
+
+    const nextRole = id && user.role === 'owner' ? 'owner' : data.role;
+    const isPlatform = nextRole === 'owner' || nextRole === 'admin';
+    const email = data.email?.trim().toLowerCase() || null;
+
+    if (isPlatform) {
+      if (!id && !email) {
+        throw new BadRequestException('El correo es obligatorio para entrar al panel web.');
+      }
+      if (!id && !data.password) {
+        throw new BadRequestException('La contraseña es obligatoria para entrar al panel web.');
+      }
+      if (id && user.email && !email) {
+        throw new BadRequestException('El correo no se puede dejar vacío.');
+      }
+    } else if (!id && !data.pin) {
+      throw new BadRequestException('El PIN es obligatorio para cajeros.');
+    }
+
+    if (email) {
+      const duplicate = await manager
+        .createQueryBuilder(User, 'u')
+        .where('lower(u.email) = :email', { email })
+        .andWhere('u.deletedAt IS NULL')
+        .getOne();
+      if (duplicate && duplicate.id !== user.id) {
+        throw new ConflictException('Ya existe un usuario con ese correo.');
+      }
+    }
+
     user.displayName = data.displayName;
-    user.role = data.role;
-    user.email = data.email ?? null;
-    user.branchId = data.branchId ?? null;
+    user.role = nextRole;
+    user.email = isPlatform ? email : null;
+    user.branchId = isPlatform ? null : (data.branchId ?? null);
     user.isActive = data.isActive ?? true;
     if (data.password) user.passwordHash = await bcrypt.hash(data.password, 10);
-    if (data.pin) user.pinHash = await bcrypt.hash(data.pin, 10);
-    return manager.save(user);
+    if (data.pin && !isPlatform) user.pinHash = await bcrypt.hash(data.pin, 10);
+    return this.publicUser(await manager.save(user));
   }
 
   async sales() {

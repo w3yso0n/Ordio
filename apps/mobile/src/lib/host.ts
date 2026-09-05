@@ -1,5 +1,7 @@
 import Constants from 'expo-constants';
 
+const PROD_API = 'https://api-ordio.dogix.tech/api';
+
 function packagerHost(): string | null {
   const candidates = [
     Constants.expoConfig?.hostUri,
@@ -14,12 +16,16 @@ function packagerHost(): string | null {
 }
 
 export function apiBaseUrl(): string {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, '');
-  }
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
+  if (fromEnv && !/localhost|127\.0\.0\.1/i.test(fromEnv)) return fromEnv;
+
+  const fromExtra = String(Constants.expoConfig?.extra?.apiUrl ?? '').replace(/\/$/, '');
+  if (fromExtra) return fromExtra;
+
   const host = packagerHost();
   if (host) return `http://${host}:3001/api`;
-  return 'http://localhost:3001/api';
+
+  return PROD_API;
 }
 
 export const API = apiBaseUrl();

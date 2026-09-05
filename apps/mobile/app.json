@@ -72,6 +72,7 @@
     },
     "extra": {
       "router": {},
+      "apiUrl": "https://api-ordio.dogix.tech/api",
       "eas": {
         "projectId": "85c986f9-13ec-46ae-8771-d73a1c30faef"
       }

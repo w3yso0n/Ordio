@@ -48,7 +48,7 @@ EAS ya está ligado al proyecto (`eas.json` + `projectId` en `app.json`). No hac
 
 | Quién | Dato |
 | --- | --- |
-| Admin tenant A | `owner@ordio.local` / `ordio-admin` |
+| Admin tenant A | `owner@ordio.local` / `ordio-admin` o `admin@indio.com` / `12345678` |
 | Pairing sucursal A | `INDIO` |
 | Cajero A | PIN `1234` |
 | Admin tenant B | `owner-b@ordio.local` / `ordio-admin` |
@@ -76,7 +76,7 @@ Abre `http://localhost:3002` → redirige a `/login`.
 3. **Caja** — Abrir y cerrar el día por sucursal: fondo inicial, lo esperado y el efectivo contado. La app no abre ni cierra caja.
 4. **Sucursales** — CRUD de sucursales: nombre, dirección y código de pairing (si lo dejas vacío se genera). Ese código es el que escribe la caja en `/pair`.
 5. **Productos** — Elige sucursal, luego categorías y catálogo (alta, edición y baja). Un cambio emite `catalog.updated` por WebSocket a esa sucursal (`cash.session.changed` cuando abre o cierra caja).
-6. **Usuarios** — Cajeros y admins: nombre, PIN, sucursal y rol. El owner no se borra.
+6. **Usuarios** — Dos listas: **panel web** (correo y contraseña, rol admin) y **caja** (nombre, PIN y sucursal). El owner no se borra.
 7. **Ventas** — Lista de tickets cobrados de la organización.
 
 El token admin se guarda en `localStorage` (`ordio_token`). Si caduca, la UI te manda otra vez a login.

@@ -21,7 +21,7 @@ pnpm --filter @ordio/admin dev
 pnpm --filter @ordio/mobile start
 ```
 
-Admin: `owner@ordio.local` / `ordio-admin`  
+Admin: `owner@ordio.local` / `ordio-admin` · `admin@indio.com` / `12345678`  
 Pairing: `INDIO`  PIN caja: `1234`
 
 El runtime de Nest usa `ordio_app`, nunca `postgres`. Login/pair pasan por funciones `SECURITY DEFINER`.
