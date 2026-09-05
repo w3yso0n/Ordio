@@ -8,6 +8,7 @@ const links = [
   { href: '/cash', label: 'Caja' },
   { href: '/branches', label: 'Sucursales' },
   { href: '/products', label: 'Productos' },
+  { href: '/supplies', label: 'Suministros' },
   { href: '/users', label: 'Usuarios' },
   { href: '/sales', label: 'Ventas' },
   { href: '/orders', label: 'Pedidos' },

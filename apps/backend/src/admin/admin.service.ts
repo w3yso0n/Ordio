@@ -1,8 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { In, IsNull } from 'typeorm';
-import { Category, Product, Sale, SaleItem, Payment, User, Branch, Device, CashRegisterSession, Order, OrderItem, PrintJob } from '../entities';
+import { EntityManager, In, IsNull } from 'typeorm';
+import { Category, Product, Sale, SaleItem, Payment, User, Branch, Device, CashRegisterSession, Order, OrderItem, PrintJob, Supply, SupplyExpense } from '../entities';
 import { getTenantManager } from '../tenant/tenant-context';
 import { EventsGateway } from '../events/events.gateway';
 import { JwtPayload } from '../auth/auth.types';
@@ -149,24 +149,7 @@ export class AdminService {
   }
 
 
-  async dashboard() {
-    const manager = getTenantManager();
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const sales = await manager
-      .createQueryBuilder(Sale, 's')
-      .where('s.createdAt >= :start', { start })
-      .andWhere('s.status = :status', { status: 'paid' })
-      .getMany();
-
-    const byHour = Array.from({ length: 24 }, (_, hour) => ({ hour, totalCents: 0, count: 0 }));
-    let cashCents = 0;
-    let transferCents = 0;
-    for (const sale of sales) {
-      const hour = new Date(sale.createdAt).getHours();
-      byHour[hour].totalCents += sale.totalCents;
-      byHour[hour].count += 1;
-    }
+  private async paymentTotals(manager: EntityManager, start: Date) {
     const payments = await manager.query(
       `SELECT p.method, COALESCE(SUM(p.amount_cents),0)::int AS total
        FROM payments p
@@ -175,17 +158,82 @@ export class AdminService {
        GROUP BY p.method`,
       [start],
     );
+    let cashCents = 0;
+    let transferCents = 0;
     for (const row of payments) {
-      if (row.method === 'cash') cashCents = Number(row.total);
-      if (row.method === 'transfer' || row.method === 'card') transferCents = Number(row.total);
+      if (row.method === 'cash') cashCents += Number(row.total);
+      if (row.method === 'transfer' || row.method === 'card') transferCents += Number(row.total);
     }
+    return { cashCents, transferCents };
+  }
+
+  async dashboard() {
+    const manager = getTenantManager();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
+
+    const [sales, monthRow, todayPay, monthPay, suppliesRow, suppliesBreakdown] = await Promise.all([
+      manager
+        .createQueryBuilder(Sale, 's')
+        .where('s.createdAt >= :start', { start })
+        .andWhere('s.status = :status', { status: 'paid' })
+        .getMany(),
+      manager
+        .createQueryBuilder(Sale, 's')
+        .select('COUNT(s.id)', 'salesCount')
+        .addSelect('COALESCE(SUM(s.totalCents), 0)', 'totalCents')
+        .where('s.createdAt >= :start', { start: monthStart })
+        .andWhere('s.status = :status', { status: 'paid' })
+        .getRawOne<{ salesCount: string; totalCents: string }>(),
+      this.paymentTotals(manager, start),
+      this.paymentTotals(manager, monthStart),
+      manager.query(
+        `SELECT COALESCE(SUM(e.amount_cents),0)::int AS total
+         FROM supply_expenses e
+         JOIN supplies s ON s.id = e.supply_id
+         WHERE e.year = $1 AND e.month = $2 AND s.deleted_at IS NULL`,
+        [monthStart.getFullYear(), monthStart.getMonth() + 1],
+      ),
+      manager.query(
+        `SELECT s.id, s.name, e.amount_cents AS "amountCents"
+         FROM supply_expenses e
+         JOIN supplies s ON s.id = e.supply_id
+         WHERE e.year = $1 AND e.month = $2 AND s.deleted_at IS NULL AND e.amount_cents > 0
+         ORDER BY e.amount_cents DESC, s.name ASC`,
+        [monthStart.getFullYear(), monthStart.getMonth() + 1],
+      ),
+    ]);
+
+    const byHour = Array.from({ length: 24 }, (_, hour) => ({ hour, totalCents: 0, count: 0 }));
+    for (const sale of sales) {
+      const hour = new Date(sale.createdAt).getHours();
+      byHour[hour].totalCents += sale.totalCents;
+      byHour[hour].count += 1;
+    }
+    const monthTotalCents = Number(monthRow?.totalCents ?? 0);
+    const suppliesCents = Number(suppliesRow?.[0]?.total ?? 0);
     return {
       date: start.toISOString(),
       salesCount: sales.length,
       totalCents: sales.reduce((sum, s) => sum + s.totalCents, 0),
-      cashCents,
-      transferCents,
+      cashCents: todayPay.cashCents,
+      transferCents: todayPay.transferCents,
       byHour,
+      month: {
+        start: monthStart.toISOString(),
+        salesCount: Number(monthRow?.salesCount ?? 0),
+        totalCents: monthTotalCents,
+        cashCents: monthPay.cashCents,
+        transferCents: monthPay.transferCents,
+        suppliesCents,
+        profitCents: monthTotalCents - suppliesCents,
+        supplies: (suppliesBreakdown ?? []).map((row: { id: string; name: string; amountCents: string | number }) => ({
+          id: row.id,
+          name: row.name,
+          amountCents: Number(row.amountCents),
+        })),
+      },
     };
   }
 
@@ -413,5 +461,68 @@ export class AdminService {
     if (!job) throw new NotFoundException('Comanda no encontrada');
     job.status = 'printed';
     return manager.save(job);
+  }
+
+  async supplies(year: number, month: number) {
+    const manager = getTenantManager();
+    const list = await manager.find(Supply, {
+      where: { deletedAt: IsNull() },
+      order: { name: 'ASC' },
+    });
+    const expenses = list.length
+      ? await manager.find(SupplyExpense, { where: { year, month, supplyId: In(list.map((s) => s.id)) } })
+      : [];
+    const bySupply = new Map(expenses.map((row) => [row.supplyId, row.amountCents]));
+    return list.map((supply) => ({
+      id: supply.id,
+      name: supply.name,
+      amountCents: bySupply.get(supply.id) ?? 0,
+      year,
+      month,
+    }));
+  }
+
+  async upsertSupply(auth: JwtPayload, id: string | undefined, name: string) {
+    const manager = getTenantManager();
+    const existing = id ? await manager.findOne(Supply, { where: { id, deletedAt: IsNull() } }) : null;
+    if (id && !existing) throw new NotFoundException('Suministro no encontrado');
+    const row = existing ?? manager.create(Supply, { organizationId: auth.organizationId, isActive: true });
+    row.name = name.trim();
+    return manager.save(row);
+  }
+
+  async deleteSupply(id: string) {
+    const manager = getTenantManager();
+    const row = await manager.findOne(Supply, { where: { id, deletedAt: IsNull() } });
+    if (!row) throw new NotFoundException('Suministro no encontrado');
+    row.deletedAt = new Date();
+    row.isActive = false;
+    await manager.save(row);
+    return { ok: true };
+  }
+
+  async upsertSupplyExpense(
+    auth: JwtPayload,
+    supplyId: string,
+    data: { year: number; month: number; amountCents: number },
+  ) {
+    const manager = getTenantManager();
+    const supply = await manager.findOne(Supply, { where: { id: supplyId, deletedAt: IsNull() } });
+    if (!supply) throw new NotFoundException('Suministro no encontrado');
+    let row = await manager.findOne(SupplyExpense, {
+      where: { supplyId, year: data.year, month: data.month },
+    });
+    if (!row) {
+      row = manager.create(SupplyExpense, {
+        organizationId: auth.organizationId,
+        supplyId,
+        year: data.year,
+        month: data.month,
+        amountCents: data.amountCents,
+      });
+    } else {
+      row.amountCents = data.amountCents;
+    }
+    return manager.save(row);
   }
 }

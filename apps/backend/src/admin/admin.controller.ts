@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { upsertBranchSchema, upsertCategorySchema, upsertProductSchema, upsertUserSchema, adminOpenCashSchema, closeCashSchema } from '@ordio/shared';
+import { upsertBranchSchema, upsertCategorySchema, upsertProductSchema, upsertUserSchema, upsertSupplySchema, upsertSupplyExpenseSchema, adminOpenCashSchema, closeCashSchema } from '@ordio/shared';
 import { AdminService } from './admin.service';
 import { CashService } from '../cash/cash.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -101,6 +101,40 @@ export class AdminController {
   @Delete('products/:id')
   deleteProduct(@Param('id') id: string) {
     return this.admin.deleteProduct(id);
+  }
+
+  @Get('supplies')
+  supplies(@Query('year') year?: string, @Query('month') month?: string) {
+    const now = new Date();
+    const y = Number(year);
+    const m = Number(month);
+    return this.admin.supplies(
+      Number.isInteger(y) && y >= 2000 ? y : now.getFullYear(),
+      Number.isInteger(m) && m >= 1 && m <= 12 ? m : now.getMonth() + 1,
+    );
+  }
+
+  @Post('supplies')
+  createSupply(@AuthUser() auth: JwtPayload, @Body() body: unknown) {
+    const dto = upsertSupplySchema.parse(body);
+    return this.admin.upsertSupply(auth, undefined, dto.name);
+  }
+
+  @Put('supplies/:id')
+  updateSupply(@AuthUser() auth: JwtPayload, @Param('id') id: string, @Body() body: unknown) {
+    const dto = upsertSupplySchema.parse(body);
+    return this.admin.upsertSupply(auth, id, dto.name);
+  }
+
+  @Delete('supplies/:id')
+  deleteSupply(@Param('id') id: string) {
+    return this.admin.deleteSupply(id);
+  }
+
+  @Put('supplies/:id/expense')
+  upsertSupplyExpense(@AuthUser() auth: JwtPayload, @Param('id') id: string, @Body() body: unknown) {
+    const dto = upsertSupplyExpenseSchema.parse(body);
+    return this.admin.upsertSupplyExpense(auth, id, dto);
   }
 
   @Get('users')

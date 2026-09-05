@@ -16,6 +16,7 @@
     "migration:run": "pnpm typeorm migration:run",
     "migration:revert": "pnpm typeorm migration:revert",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "seed-demo": "ts-node -r tsconfig-paths/register src/database/seed-demo.ts",
     "reset-indio": "ts-node -r tsconfig-paths/register src/database/reset-indio.ts",
     "setup-db": "ts-node -r tsconfig-paths/register src/database/setup-db.ts"
   },

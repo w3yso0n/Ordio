@@ -103,3 +103,14 @@ export const upsertBranchSchema = z.object({
   activationCode: z.string().min(4).max(32).optional(),
   address: z.string().nullable().optional(),
 });
+
+export const upsertSupplySchema = z.object({
+  name: z.string().min(1),
+  sortOrder: z.number().int().optional(),
+});
+
+export const upsertSupplyExpenseSchema = z.object({
+  year: z.number().int().min(2000).max(2100),
+  month: z.number().int().min(1).max(12),
+  amountCents: z.number().int().nonnegative(),
+});

@@ -86,11 +86,19 @@ export function Alert({ children }: { children: ReactNode }) {
   );
 }
 
-export function Metric({ label, value }: { label: string; value: string }) {
+export function Metric({
+  label,
+  value,
+  valueClassName = '',
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="border-b border-border py-4 first:pt-0 last:border-b-0 last:pb-0 sm:border-b-0 sm:border-r sm:px-6 sm:py-0 sm:first:pl-0 sm:last:border-r-0 sm:last:pr-0">
       <div className="text-xs font-medium uppercase tracking-wider text-muted">{label}</div>
-      <div className="mt-2 text-2xl font-semibold tabular tracking-tight">{value}</div>
+      <div className={`mt-2 text-2xl font-semibold tabular tracking-tight ${valueClassName}`}>{value}</div>
     </div>
   );
 }

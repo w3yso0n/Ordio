@@ -14,6 +14,8 @@ import { CashRegisterSession } from './cash-register-session.entity';
 import { CashMovement } from './cash-movement.entity';
 import { PrintJob } from './print-job.entity';
 import { BranchDailyCounter } from './branch-daily-counter.entity';
+import { Supply } from './supply.entity';
+import { SupplyExpense } from './supply-expense.entity';
 
 export const entities = [
   Organization,
@@ -32,6 +34,8 @@ export const entities = [
   CashMovement,
   PrintJob,
   BranchDailyCounter,
+  Supply,
+  SupplyExpense,
 ];
 
 export {
@@ -51,4 +55,6 @@ export {
   CashMovement,
   PrintJob,
   BranchDailyCounter,
+  Supply,
+  SupplyExpense,
 };
