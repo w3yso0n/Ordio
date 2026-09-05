@@ -1,5 +1,5 @@
 import type { KitchenLineKind } from './kitchen';
-import { buildKitchenSlip, formatItemLines, ruleLine } from './kitchen-ticket-layout';
+import { buildKitchenSlip, formatItemLines, ruleLine, toPrinterAscii } from './kitchen-ticket-layout';
 import { receiptSlipPlainLines } from './receipt-ticket-layout';
 
 export type PrinterStatus = 'ready' | 'disconnected' | 'mock';
@@ -49,20 +49,12 @@ export const CERTIFIED_PRINTERS = [
 
 export type CertifiedPrinterId = (typeof CERTIFIED_PRINTERS)[number]['id'];
 
-/** Estas impresoras baratas no traen CP437: acentos salen como π. Solo ASCII. */
-function toPrinterAscii(text: string): string {
-  return text
-    .replace(/[·•]/g, '-')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\x20-\x7E]/g, '');
-}
-
 function encodePrinterText(text: string): number[] {
   const ascii = toPrinterAscii(text);
   const bytes: number[] = [];
   for (let i = 0; i < ascii.length; i++) {
-    bytes.push(ascii.charCodeAt(i) & 0x7f);
+    const code = ascii.charCodeAt(i);
+    if (code >= 0x20 && code <= 0x7e) bytes.push(code);
   }
   return bytes;
 }
@@ -96,8 +88,10 @@ export function encodeEscPosKitchen(payload: KitchenTicketPayload): Uint8Array {
   const left = [ESC, 0x61, 0x00];
   const boldOn = [ESC, 0x45, 0x01];
   const boldOff = [ESC, 0x45, 0x00];
-  /** Ancho y alto x2: EXTRA, número e ítems. */
+  /** Número y banners: ancho y alto x2. */
   const doubleOn = [GS, 0x21, 0x11];
+  /** Ítems: alto x4 y ancho x2 (el doble de alto que antes). */
+  const itemSizeOn = [GS, 0x21, 0x13];
   const sizeOff = [GS, 0x21, 0x00];
   const cut = [GS, 0x56, 0x41, 0x30];
   const lf = [0x0a];
@@ -108,10 +102,11 @@ export function encodeEscPosKitchen(payload: KitchenTicketPayload): Uint8Array {
   const push = (...parts: number[][]) => bytes.push(...parts.flat());
 
   push(init);
-  /** El corte se come el arranque del ticket: baja COMANDA un poco. */
-  push(lf, lf, lf, lf);
   for (const block of blocks) {
     switch (block.type) {
+      case 'spacer':
+        for (let i = 0; i < block.lines; i++) push(lf);
+        break;
       case 'title':
         push(center, boldOn, line(block.text), boldOff);
         break;
@@ -128,7 +123,7 @@ export function encodeEscPosKitchen(payload: KitchenTicketPayload): Uint8Array {
         push(left, line(ruleLine()));
         break;
       case 'item':
-        push(left, doubleOn);
+        push(left, itemSizeOn);
         if (block.kind === 'add') push(boldOn);
         for (const row of formatItemLines(block.qty, block.name, block.kind)) {
           push(line(row));

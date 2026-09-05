@@ -53,6 +53,8 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
 
       {blocks.map((block, index) => {
         switch (block.type) {
+          case 'spacer':
+            return <View key={`${block.type}-${index}`} style={{ height: block.lines * 10 }} />;
           case 'title':
             return (
               <Text
@@ -64,7 +66,6 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
                   letterSpacing: 2,
                   textAlign: 'center',
                   color: '#1A1A1A',
-                  marginTop: space[16],
                 }}
               >
                 {block.text}
@@ -155,11 +156,11 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
                     key={rowIndex}
                     style={{
                       fontFamily: mono,
-                      fontSize: block.kind === 'void' ? 16 : 22,
+                      fontSize: block.kind === 'void' ? 32 : 44,
                       fontWeight: block.kind === 'void' ? '600' : '800',
                       color: block.kind === 'void' ? colors.danger : '#1A1A1A',
                       textDecorationLine: block.kind === 'void' ? 'line-through' : 'none',
-                      lineHeight: block.kind === 'void' ? 22 : 28,
+                      lineHeight: block.kind === 'void' ? 38 : 52,
                     }}
                   >
                     {row}
