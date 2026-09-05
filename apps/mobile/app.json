@@ -10,16 +10,30 @@
       "url": "https://u.expo.dev/85c986f9-13ec-46ae-8771-d73a1c30faef"
     },
     "orientation": "portrait",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "icon": "./assets/images/icon.png",
     "scheme": "ordio",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "tech.dogix.ordio",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja.",
+        "NSBluetoothPeripheralUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja."
+      }
     },
     "android": {
       "package": "tech.dogix.ordio",
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -41,7 +55,14 @@
       "expo-font",
       "expo-secure-store",
       "expo-sqlite",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "react-native-thermal-printer-driver",
+        {
+          "bluetoothAlwaysUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja.",
+          "bluetoothPeripheralUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

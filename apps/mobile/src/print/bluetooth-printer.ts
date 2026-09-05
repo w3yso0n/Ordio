@@ -1,36 +1,33 @@
 import type { KitchenTicketPayload, PrinterService, ReceiptPayload, PrintResult, PrinterStatus } from '@ordio/shared';
 import { encodeEscPosKitchen, encodeEscPosReceipt } from '@ordio/shared';
+import { isNativePrinterAvailable, printRawBytes } from './bluetooth';
+import { resolvePrinterAddress } from './printer-store';
 
 export class BluetoothPrinterService implements PrinterService {
-  constructor(private readonly address?: string) {}
-
   async printReceipt(payload: ReceiptPayload): Promise<PrintResult> {
-    try {
-      const bytes = encodeEscPosReceipt(payload);
-      console.log('[printer:escpos:receipt]', this.address ?? 'unpaired', bytes.byteLength, 'bytes');
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: (err as Error).message };
-    }
+    return this.send(encodeEscPosReceipt(payload));
   }
 
   async printKitchenTicket(payload: KitchenTicketPayload): Promise<PrintResult> {
+    return this.send(encodeEscPosKitchen(payload));
+  }
+
+  async getStatus(): Promise<PrinterStatus> {
+    if (!isNativePrinterAvailable()) return 'mock';
+    return resolvePrinterAddress() ? 'ready' : 'disconnected';
+  }
+
+  private async send(bytes: Uint8Array): Promise<PrintResult> {
+    const address = resolvePrinterAddress();
+    if (!address) return { ok: true };
+    if (!isNativePrinterAvailable()) {
+      return { ok: false, error: 'Esta caja necesita un development build para imprimir por Bluetooth.' };
+    }
     try {
-      const bytes = encodeEscPosKitchen(payload);
-      console.log('[printer:escpos:kitchen]', this.address ?? 'unpaired', bytes.byteLength, 'bytes');
+      await printRawBytes(address, bytes);
       return { ok: true };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
     }
   }
-
-  async getStatus(): Promise<PrinterStatus> {
-    return this.address ? 'ready' : 'disconnected';
-  }
-}
-
-export function createPrinterService(): PrinterService {
-  const address = process.env.EXPO_PUBLIC_PRINTER_ADDRESS;
-  if (address) return new BluetoothPrinterService(address);
-  return new (require('./mock-printer').MockPrinterService)();
 }

@@ -204,6 +204,9 @@ export default function SaleScreen() {
           >
             <Text style={{ color: colors.onBrand, fontSize: type.meta, fontWeight: '800' }}>Cuentas</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/printer' as Href)} hitSlop={10}>
+            <Text style={{ color: colors.textMuted, fontSize: type.meta, fontWeight: '600' }}>Impresora</Text>
+          </Pressable>
           <Pressable onPress={() => router.push('/kitchen-preview' as Href)} hitSlop={10}>
             <Text style={{ color: colors.textMuted, fontSize: type.meta, fontWeight: '600' }}>80 mm</Text>
           </Pressable>

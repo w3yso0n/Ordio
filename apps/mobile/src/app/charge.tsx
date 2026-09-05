@@ -22,10 +22,8 @@ export default function ChargeScreen() {
     setBusy(true);
     try {
       const result = await payOrder(order, method);
-      await tryPrint(async () => {
-        if (result.kitchen) await printer.printKitchenTicket(result.kitchen);
-        await printer.printReceipt(result.receipt);
-      });
+      if (result.kitchen) await tryPrint(() => printer.printKitchenTicket(result.kitchen!));
+      await tryPrint(() => printer.printReceipt(result.receipt));
       clearTicket();
       setReceipt(result.receipt);
     } catch (err) {

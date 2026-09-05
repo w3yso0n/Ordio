@@ -1,19 +1,22 @@
+import { Alert, Platform } from 'react-native';
 import { BluetoothPrinterService } from './bluetooth-printer';
 import { MockPrinterService } from './mock-printer';
 import type { PrinterService, PrintResult } from '@ordio/shared';
 
 export function createPrinterService(): PrinterService {
-  const address = process.env.EXPO_PUBLIC_PRINTER_ADDRESS;
-  if (address) return new BluetoothPrinterService(address);
-  return new MockPrinterService();
+  if (Platform.OS === 'web') return new MockPrinterService();
+  return new BluetoothPrinterService();
 }
 
 export const printer = createPrinterService();
 
 export async function tryPrint(task: () => Promise<PrintResult | void>): Promise<void> {
   try {
-    await task();
-  } catch {
-    /* La impresora es opcional: la venta no depende de ella. */
+    const result = await task();
+    if (result && 'ok' in result && result.ok === false && result.error) {
+      Alert.alert('No se imprimió', result.error);
+    }
+  } catch (err) {
+    Alert.alert('No se imprimió', (err as Error).message || 'Revisa la impresora Bluetooth.');
   }
 }

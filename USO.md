@@ -124,7 +124,9 @@ PUT/DELETE /api/admin/users/:id
 
 ## Impresora
 
-Sin `EXPO_PUBLIC_PRINTER_ADDRESS` se usa el mock: el ticket se registra en consola, el flujo de venta no cambia. Si defines una dirección, entra el adaptador Bluetooth (hoy loguea el ESC/POS generado; el envío real al hardware es el siguiente paso nativo y normalmente pide development build, no Expo Go).
+En la caja: **Venta → Impresora**. Empareja la térmica en Ajustes > Bluetooth del teléfono, búsca en la app y elígela. Queda guardada en el dispositivo. Al enviar a cocina y al cobrar se manda ESC/POS por Bluetooth Classic (SPP). Sin impresora elegida la venta sigue igual.
+
+Bluetooth Classic no entra en Expo Go: hace falta un development build (`pnpm --filter @ordio/mobile exec expo run:android` o el perfil `development` de EAS). `EXPO_PUBLIC_PRINTER_ADDRESS` (MAC o `bt:AA:BB:CC:DD:EE:FF`) sirve de respaldo si aún no hay una impresora guardada.
 
 ## Aislar tenants
 
@@ -134,7 +136,7 @@ Con `ORDIO-DEMO` vendes en el tenant A. Con `ORDIO-B` emparejas otro teléfono a
 
 - La venta en pantalla es local en memoria; SQLite (`ordio.db`) y `sync_queue` están definidos para el camino offline, pero las pantallas actuales pegan a la API en el momento del cobro.
 - El pairing no se recuerda al reabrir la app: el índice redirige siempre a `/pair`.
-- La impresora Bluetooth aún no envía al dispositivo físico.
+- La impresora Bluetooth imprime desde un development build; Expo Go no alcanza.
 - Los movimientos de caja (depósito, retiro, gasto) existen en la API; la app móvil solo abre y cierra.
 - No se puede borrar una sucursal si todavía tiene categorías/productos activos, dispositivos emparejados o historial de caja/ventas.
 - EAS no interviene en `expo start`.
