@@ -134,7 +134,7 @@ export default function UsersPage() {
           </Select>
         </Field>
         <div className="flex items-end gap-2">
-          <Button type="submit">{editingId ? 'Guardar' : 'Crear'}</Button>
+          <Button type="submit" className="flex-1 sm:flex-none">{editingId ? 'Guardar' : 'Crear'}</Button>
           {editingId ? (
             <Button type="button" variant="secondary" onClick={reset}>
               Cancelar
@@ -170,7 +170,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </div>
-                <span className="whitespace-nowrap">
+                <span className="flex shrink-0 flex-wrap justify-end">
                   <Button type="button" variant="ghost" className="h-8 px-2" onClick={() => startEdit(u)}>
                     Editar
                   </Button>

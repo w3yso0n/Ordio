@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { showBlocked } from '@/lib/blocked';
-import { Alert, Button, EmptyState, Field, Input, PageHeader, Panel } from '@/components/ui';
+import { Alert, Button, EmptyState, Field, Input, PageHeader, Panel, TableScroll } from '@/components/ui';
 
 type Branch = {
   id: string;
@@ -123,7 +123,8 @@ export default function BranchesPage() {
         {branches.length === 0 ? (
           <EmptyState title="Sin sucursales" description="Agrega la primera para poder armar el catálogo y emparejar cajas." />
         ) : (
-          <table className="w-full text-sm">
+          <TableScroll>
+          <table className="w-full min-w-[32rem] text-sm">
             <thead className="bg-surface-secondary text-muted text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
@@ -150,6 +151,7 @@ export default function BranchesPage() {
               ))}
             </tbody>
           </table>
+          </TableScroll>
         )}
       </Panel>
     </div>

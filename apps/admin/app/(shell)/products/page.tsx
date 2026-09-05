@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { showBlocked } from '@/lib/blocked';
-import { Alert, Button, EmptyState, Field, Input, PageHeader, Panel, Select } from '@/components/ui';
+import { Alert, Button, EmptyState, Field, Input, PageHeader, Panel, Select, TableScroll } from '@/components/ui';
 
 type Branch = { id: string; name: string };
 type Category = { id: string; name: string };
@@ -268,7 +268,8 @@ export default function ProductsPage() {
         ) : products.length === 0 ? (
           <EmptyState title="Sin productos" description="Agrega el primero con el formulario de arriba." />
         ) : (
-          <table className="w-full text-sm">
+          <TableScroll>
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-surface-secondary text-muted text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
@@ -338,6 +339,7 @@ export default function ProductsPage() {
               ))}
             </tbody>
           </table>
+          </TableScroll>
         )}
       </Panel>
     </div>

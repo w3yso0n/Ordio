@@ -49,40 +49,43 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader title="Hoy" description="Actividad de la sucursal en el día." />
-      <Panel className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
+      <Panel className="p-4 md:p-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-0">
           <Metric label="Ventas" value={String(data.salesCount)} />
           <Metric label="Total" value={mxn(data.totalCents)} />
           <Metric
             label="Efectivo / Transferencia"
             value={`${mxn(data.cashCents)} / ${mxn(data.transferCents)}`}
+            className="col-span-2 md:col-span-1"
           />
         </div>
       </Panel>
       <h2 className="mt-8 mb-3 text-sm font-semibold text-muted">
         Total del mes · {monthLabel}
       </h2>
-      <Panel className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
+      <Panel className="p-4 md:p-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-0">
           <Metric label="Ventas" value={String(month.salesCount)} />
           <Metric label="Total" value={mxn(month.totalCents)} />
           <Metric
             label="Efectivo / Transferencia"
             value={`${mxn(month.cashCents)} / ${mxn(month.transferCents)}`}
+            className="col-span-2 md:col-span-1"
           />
         </div>
       </Panel>
       <h2 className="mt-8 mb-3 text-sm font-semibold text-muted">
         Ingresos vs suministros · {monthLabel}
       </h2>
-      <Panel className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
+      <Panel className="p-4 md:p-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-0">
           <Metric label="Ingresos" value={mxn(incomeCents)} />
           <Metric label="Suministros" value={mxn(suppliesCents)} />
           <Metric
             label={profitCents >= 0 ? 'Utilidad' : 'Pérdida'}
             value={mxn(Math.abs(profitCents))}
             valueClassName={profitCents >= 0 ? 'text-success' : 'text-danger'}
+            className="col-span-2 md:col-span-1"
           />
         </div>
         <div className="mt-6 space-y-3">

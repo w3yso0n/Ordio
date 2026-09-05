@@ -157,7 +157,7 @@ export default function SuppliesPage() {
         </Select>
       </Field>
 
-      <form onSubmit={saveSupply} className="mt-8 mb-6 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_8rem_auto]">
+      <form onSubmit={saveSupply} className="mt-6 mb-6 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_8rem_auto]">
         <Field label={editingId ? 'Editar suministro' : 'Nuevo suministro'}>
           <Input
             value={name}
@@ -172,11 +172,12 @@ export default function SuppliesPage() {
           </Field>
         )}
         <div className="flex items-end gap-2">
-          <Button type="submit">{editingId ? 'Guardar' : 'Agregar'}</Button>
+          <Button type="submit" className="flex-1 sm:flex-none">{editingId ? 'Guardar' : 'Agregar'}</Button>
           {editingId ? (
             <Button
               type="button"
               variant="secondary"
+              className="flex-1 sm:flex-none"
               onClick={() => {
                 setEditingId(null);
                 setName('');
@@ -196,49 +197,37 @@ export default function SuppliesPage() {
             description="Agrega los ingredientes que compras cada mes y anota cuánto invertiste."
           />
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-surface-secondary text-muted text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Suministro</th>
-                <th className="px-4 py-3 font-medium">Gasto de {monthLabel}</th>
-                <th className="px-4 py-3 font-medium" />
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <ul className="md:hidden">
               {rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-4 py-3 font-medium">{row.name}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-36">
-                        <Input
-                          value={amounts[row.id] ?? ''}
-                          onChange={(e) => setAmounts((current) => ({ ...current, [row.id]: e.target.value }))}
-                          onBlur={(e) => {
-                            if (e.target.value !== (row.amountCents / 100).toFixed(2)) {
-                              void saveExpense(row, e.target.value);
-                            }
-                          }}
-                          inputMode="decimal"
-                          aria-label={`Gasto de ${row.name}`}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="h-8 px-3"
-                        disabled={savingId === row.id}
-                        onClick={() => saveExpense(row)}
-                      >
-                        {savingId === row.id ? 'Guardando…' : 'Guardar'}
-                      </Button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                <li key={row.id} className="border-t border-border px-4 py-4 first:border-t-0">
+                  <p className="font-semibold">{row.name}</p>
+                  <Field label={`Gasto de ${monthLabel}`}>
+                    <Input
+                      value={amounts[row.id] ?? ''}
+                      onChange={(e) => setAmounts((current) => ({ ...current, [row.id]: e.target.value }))}
+                      onBlur={(e) => {
+                        if (e.target.value !== (row.amountCents / 100).toFixed(2)) {
+                          void saveExpense(row, e.target.value);
+                        }
+                      }}
+                      inputMode="decimal"
+                      aria-label={`Gasto de ${row.name}`}
+                    />
+                  </Field>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="flex-1"
+                      disabled={savingId === row.id}
+                      onClick={() => saveExpense(row)}
+                    >
+                      {savingId === row.id ? 'Guardando…' : 'Guardar'}
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"
-                      className="h-8 px-2"
                       onClick={() => {
                         setEditingId(row.id);
                         setName(row.name);
@@ -246,22 +235,89 @@ export default function SuppliesPage() {
                     >
                       Editar
                     </Button>
-                    <Button type="button" variant="danger" className="h-8 px-2" onClick={() => removeSupply(row)}>
+                    <Button type="button" variant="danger" onClick={() => removeSupply(row)}>
                       Borrar
                     </Button>
+                  </div>
+                </li>
+              ))}
+              <li className="flex items-center justify-between border-t border-border bg-surface-secondary px-4 py-3 font-semibold">
+                <span>Total del mes</span>
+                <span className="tabular">{mxn(totalCents)}</span>
+              </li>
+            </ul>
+            <table className="hidden w-full text-sm md:table">
+              <thead className="bg-surface-secondary text-left text-muted">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Suministro</th>
+                  <th className="px-4 py-3 font-medium">Gasto de {monthLabel}</th>
+                  <th className="px-4 py-3 font-medium" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="border-t border-border">
+                    <td className="px-4 py-3 font-medium">{row.name}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-36">
+                          <Input
+                            value={amounts[row.id] ?? ''}
+                            onChange={(e) => setAmounts((current) => ({ ...current, [row.id]: e.target.value }))}
+                            onBlur={(e) => {
+                              if (e.target.value !== (row.amountCents / 100).toFixed(2)) {
+                                void saveExpense(row, e.target.value);
+                              }
+                            }}
+                            inputMode="decimal"
+                            aria-label={`Gasto de ${row.name}`}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="h-8 min-h-8 px-3"
+                          disabled={savingId === row.id}
+                          onClick={() => saveExpense(row)}
+                        >
+                          {savingId === row.id ? 'Guardando…' : 'Guardar'}
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-8 min-h-8 px-2"
+                        onClick={() => {
+                          setEditingId(row.id);
+                          setName(row.name);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        className="h-8 min-h-8 px-2"
+                        onClick={() => removeSupply(row)}
+                      >
+                        Borrar
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border bg-surface-secondary">
+                  <td className="px-4 py-3 font-semibold">Total del mes</td>
+                  <td className="px-4 py-3 font-semibold tabular" colSpan={2}>
+                    {mxn(totalCents)}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-border bg-surface-secondary">
-                <td className="px-4 py-3 font-semibold">Total del mes</td>
-                <td className="px-4 py-3 font-semibold tabular" colSpan={2}>
-                  {mxn(totalCents)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </tfoot>
+            </table>
+          </>
         )}
       </Panel>
     </div>
