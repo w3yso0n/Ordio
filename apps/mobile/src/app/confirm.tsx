@@ -3,6 +3,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { formatMxn, type KitchenTicketPayload } from '@ordio/shared';
 import { pendingKitchenQty, type LocalOrderItem } from '../lib/order-engine';
+import { saleErrorMessage } from '../lib/network';
 import { sendOrder } from '../lib/orders-api';
 import { printer, tryPrint } from '../print';
 import { setTicketItemQty, startNewTicket, useTicket } from '../lib/ticket-store';
@@ -33,7 +34,7 @@ export default function ConfirmScreen() {
       }
       router.replace('/sale');
     } catch (err) {
-      Alert.alert('No se pudo enviar', (err as Error).message);
+      Alert.alert('No se pudo enviar', saleErrorMessage(err));
     } finally {
       setBusy(false);
     }

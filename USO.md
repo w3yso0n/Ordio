@@ -49,18 +49,18 @@ EAS ya está ligado al proyecto (`eas.json` + `projectId` en `app.json`). No hac
 | Quién | Dato |
 | --- | --- |
 | Admin tenant A | `owner@ordio.local` / `ordio-admin` |
-| Pairing sucursal A | `ORDIO-DEMO` |
-| Cajeros A (Caja 1 y Caja 2) | PIN `1234` |
+| Pairing sucursal A | `INDIO` |
+| Cajero A | PIN `1234` |
 | Admin tenant B | `owner-b@ordio.local` / `ordio-admin` |
 | Pairing sucursal B | `ORDIO-B` |
 
-El seed de sucursal A trae un catálogo de ejemplo (bebidas y comida). Es solo demo: en el admin se dan de alta los productos reales del negocio. Los importes son MXN.
+El seed de sucursal A trae el menú de tacos (asada, arrachera, chorizo, pellizcadas, papas, quesadillas y aguas). Los importes son MXN.
 
 ## Cómo funciona un día en caja
 
 La app arranca en **activar dispositivo** (`/pair`).
 
-1. **Pairing** — El encargado escribe el código de sucursal (`ORDIO-DEMO`). El servidor crea un `device` y devuelve JWT de tipo dispositivo. Se guarda en SecureStore (`deviceToken` + `refreshToken`). Un dispositivo queda atado a esa sucursal.
+1. **Pairing** — El encargado escribe el código de sucursal (`INDIO`). El servidor crea un `device` y devuelve JWT de tipo dispositivo. Se guarda en SecureStore (`deviceToken` + `refreshToken`). Un dispositivo queda atado a esa sucursal.
 2. **PIN** — Con el token de dispositivo pide el snapshot del catálogo (incluye cajeros de la sucursal). Eliges cajero, escribes el PIN y obtienes un JWT de cajero (`cashierToken`).
 3. **Abrir el día (admin)** — En el panel, **Caja**: elige sucursal, escribe el fondo inicial y **Abrir día**. Sin esto la app no puede tomar cuentas.
 4. **Vender** — Tocar producto → pedido. **Enviar a cocina** deja la cuenta abierta (#14). **Cobrar ahora** cierra esa cuenta.
@@ -130,7 +130,7 @@ Bluetooth Classic no entra en Expo Go: hace falta un development build (`pnpm --
 
 ## Aislar tenants
 
-Con `ORDIO-DEMO` vendes en el tenant A. Con `ORDIO-B` emparejas otro teléfono al tenant B. El owner A no debe ver ventas ni productos de B: Postgres filtra por `app.current_org_id`. Hay un e2e en `apps/backend/test/rls.e2e-spec.ts` (`pnpm test:e2e`).
+Con `INDIO` vendes en el tenant A. Con `ORDIO-B` emparejas otro teléfono al tenant B. El owner A no debe ver ventas ni productos de B: Postgres filtra por `app.current_org_id`. Hay un e2e en `apps/backend/test/rls.e2e-spec.ts` (`pnpm test:e2e`).
 
 ## Estado actual (MVP)
 

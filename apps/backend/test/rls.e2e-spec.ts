@@ -41,7 +41,7 @@ describe('RLS + auth bootstrap', () => {
 
     const pair = await request(app.getHttpServer())
       .post('/api/auth/device/pair')
-      .send({ activationCode: 'ORDIO-DEMO', name: 'e2e-tablet', platform: 'android' });
+      .send({ activationCode: 'INDIO', name: 'e2e-tablet', platform: 'android' });
     expect(pair.status).toBe(201);
     expect(pair.body.device.id).toBeDefined();
   });

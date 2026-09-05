@@ -35,7 +35,7 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
         borderWidth: 1,
         borderColor: '#D4D0C8',
         paddingHorizontal: compact ? 10 : 14,
-        paddingVertical: compact ? 12 : 18,
+        paddingVertical: compact ? 16 : 24,
       }}
     >
       <View
@@ -64,7 +64,7 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
                   letterSpacing: 2,
                   textAlign: 'center',
                   color: '#1A1A1A',
-                  marginTop: space[4],
+                  marginTop: space[16],
                 }}
               >
                 {block.text}
@@ -149,17 +149,17 @@ export function KitchenTicketSlip({ payload, compact }: Props) {
             );
           case 'item':
             return (
-              <View key={`${block.type}-${index}`} style={{ marginBottom: space[8] }}>
+              <View key={`${block.type}-${index}`} style={{ marginBottom: space[12] }}>
                 {formatItemLines(block.qty, block.name, block.kind).map((row, rowIndex) => (
                   <Text
                     key={rowIndex}
                     style={{
                       fontFamily: mono,
-                      fontSize: block.kind === 'void' ? 13 : 15,
+                      fontSize: block.kind === 'void' ? 16 : 22,
                       fontWeight: block.kind === 'void' ? '600' : '800',
                       color: block.kind === 'void' ? colors.danger : '#1A1A1A',
                       textDecorationLine: block.kind === 'void' ? 'line-through' : 'none',
-                      lineHeight: block.kind === 'void' ? 18 : 22,
+                      lineHeight: block.kind === 'void' ? 22 : 28,
                     }}
                   >
                     {row}

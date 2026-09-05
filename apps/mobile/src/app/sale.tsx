@@ -14,6 +14,7 @@ import {
 } from '../lib/catalog-cache';
 import { pinProduct } from '../lib/orders-api';
 import { saveCachedSession } from '../lib/local-checks';
+import { confirmSignOut } from '../lib/session';
 import { flushSyncQueue, pendingCount } from '../lib/sync-queue';
 import { formatMxn } from '@ordio/shared';
 import { Screen } from '../ui/screen';
@@ -209,6 +210,16 @@ export default function SaleScreen() {
           </Pressable>
           <Pressable onPress={() => router.push('/kitchen-preview' as Href)} hitSlop={10}>
             <Text style={{ color: colors.textMuted, fontSize: type.meta, fontWeight: '600' }}>80 mm</Text>
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              confirmSignOut('Salir borra la sesión de esta caja. Para volver a vender, activa el dispositivo otra vez.')
+            }
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar sesión"
+          >
+            <Text style={{ color: colors.textMuted, fontSize: type.meta, fontWeight: '600' }}>Salir</Text>
           </Pressable>
         </View>
       </View>

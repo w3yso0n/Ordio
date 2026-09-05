@@ -232,7 +232,7 @@ export class OrdersService {
     this.requireDevice(auth);
     const manager = getTenantManager();
     const order = await manager.findOne(Order, { where: { id } });
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException('Esta cuenta ya no está en el servidor. Activa de nuevo la caja y arma el pedido otra vez.');
     this.assertSameBranch(order, auth);
     if (order.status === 'paid') {
       const sale = await manager.findOneByOrFail(Sale, { orderId: id });
@@ -440,13 +440,13 @@ export class OrdersService {
     const open = await manager.findOne(CashRegisterSession, {
       where: { status: 'open', branchId: auth.branchId },
     });
-    if (!open) throw new BadRequestException('Hoy no hay caja abierta. Ábrela desde el panel.');
+    if (!open) throw new BadRequestException('Hoy no hay caja abierta. Ábrela desde el panel para enviar a cocina o cobrar.');
     return open;
   }
 
   private async loadOrder(id: string) {
     const order = await getTenantManager().findOne(Order, { where: { id } });
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException('Esta cuenta ya no está en el servidor. Activa de nuevo la caja y arma el pedido otra vez.');
     return order;
   }
 

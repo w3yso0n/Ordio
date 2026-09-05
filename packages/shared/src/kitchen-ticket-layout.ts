@@ -3,6 +3,9 @@ import { kitchenBanner, type KitchenLineKind } from './kitchen';
 /** Ancho útil típico en Font A para papel de 80 mm (≈48 caracteres). */
 export const KITCHEN_SLIP_CHARS = 48;
 
+/** Con tamaño EXTRA (ancho x2) caben ~24 caracteres en 80 mm. */
+export const KITCHEN_ITEM_CHARS = 24;
+
 /** Ancho de preview en px (80 mm @ ~96 dpi). */
 export const KITCHEN_SLIP_PREVIEW_WIDTH = 302;
 
@@ -51,7 +54,7 @@ function wrapText(text: string, width: number, indent = ''): string[] {
 function formatItemLines(qty: number, name: string, kind: KitchenLineKind): string[] {
   if (kind === 'void') {
     const head = `VOID ${String(qty).padStart(2, ' ')}`;
-    const firstWidth = KITCHEN_SLIP_CHARS - head.length - 1;
+    const firstWidth = KITCHEN_ITEM_CHARS - head.length - 1;
     const wrapped = wrapText(name.toUpperCase(), firstWidth);
     const result = [`${head} ${wrapped[0] ?? ''}`.trimEnd()];
     const contIndent = ' '.repeat(head.length + 1);
@@ -62,7 +65,7 @@ function formatItemLines(qty: number, name: string, kind: KitchenLineKind): stri
   }
 
   const qtyCol = String(qty).padStart(2, ' ');
-  const firstWidth = KITCHEN_SLIP_CHARS - 4;
+  const firstWidth = KITCHEN_ITEM_CHARS - 4;
   const wrapped = wrapText(name.toUpperCase(), firstWidth);
   const result = [`${qtyCol}  ${wrapped[0] ?? ''}`.trimEnd()];
   const contIndent = '     ';

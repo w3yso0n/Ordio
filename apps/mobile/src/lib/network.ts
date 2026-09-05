@@ -28,5 +28,22 @@ export function shouldQueueLocally(err: unknown): boolean {
   if (name === 'AuthError') return true;
   const status = (err as { status?: number })?.status;
   if (status === 401 || status === 408 || status === 429 || (status != null && status >= 500)) return true;
-  return /caja abierta|sin conexión|invalid token/i.test(errorText(err));
+  const text = errorText(err);
+  if (/caja abierta/i.test(text)) return false;
+  return /sin conexión|invalid token/i.test(text);
+}
+
+export function saleErrorMessage(err: unknown): string {
+  const status = (err as { status?: number })?.status;
+  const raw = ((err as Error)?.message || errorText(err)).trim();
+  if (/caja abierta/i.test(raw)) {
+    return 'Hoy no hay caja abierta. Ábrela desde el panel para enviar a cocina o cobrar.';
+  }
+  if (/order not found/i.test(raw) || status === 404) {
+    return 'Esta cuenta ya no está en el servidor. Cierra sesión, activa de nuevo la caja y arma el pedido otra vez.';
+  }
+  if (/invalid token|unauthorized|sesión caducó|device token/i.test(raw) || status === 401) {
+    return 'La sesión de esta caja ya no vale. Cierra sesión y actívala de nuevo con el código de sucursal.';
+  }
+  return raw || 'No se pudo completar. Reintenta.';
 }

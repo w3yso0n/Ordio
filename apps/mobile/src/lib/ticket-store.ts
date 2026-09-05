@@ -84,3 +84,8 @@ export function parkCurrentTicket() {
   startNewTicket();
   return parked;
 }
+
+export function resetTicketStore() {
+  ticket = emptyOrder();
+  emit();
+}

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { decodeJwtPayload, saveSession } from '../lib/api';
+import { clearCashierSession, decodeJwtPayload, saveSession } from '../lib/api';
+import { queueClear } from '../db/client.native';
 import { API } from '../lib/host';
-import { saveDeviceContext } from '../lib/local-checks';
+import { clearLocalSaleData, saveDeviceContext } from '../lib/local-checks';
+import { resetTicketStore } from '../lib/ticket-store';
 import { Button } from '../ui/button';
 import { Field } from '../ui/field';
 import { Screen } from '../ui/screen';
 import { colors, space, type } from '../theme';
 
 export default function PairScreen() {
-  const [code, setCode] = useState('ORDIO-DEMO');
+  const [code, setCode] = useState('INDIO');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -30,6 +32,10 @@ export default function PairScreen() {
         throw new Error(typeof message === 'string' ? message : 'No se pudo activar. Reintenta.');
       }
       await saveSession('device', { accessToken: data.accessToken, refreshToken: data.refreshToken });
+      await clearCashierSession();
+      clearLocalSaleData();
+      resetTicketStore();
+      queueClear();
       const claims = decodeJwtPayload(data.accessToken);
       saveDeviceContext({
         branchId: claims?.branchId ?? data.branch?.id ?? data.device?.branchId,
@@ -61,9 +67,14 @@ export default function PairScreen() {
         <Field
           label="Código de sucursal"
           value={code}
-          onChangeText={setCode}
+          onChangeText={(value) => setCode(value.replace(/[^A-Za-z0-9-]/g, '').toUpperCase())}
+          placeholder="INDIO"
           autoCapitalize="characters"
           autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
+          spellCheck={false}
           error={error}
         />
         <Button label={busy ? 'Activando…' : 'Continuar'} onPress={() => void pair()} disabled={busy} />

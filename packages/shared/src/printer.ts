@@ -49,33 +49,20 @@ export const CERTIFIED_PRINTERS = [
 
 export type CertifiedPrinterId = (typeof CERTIFIED_PRINTERS)[number]['id'];
 
-function encodeCp437ish(text: string): number[] {
-  const map: Record<string, number> = {
-    á: 160,
-    é: 130,
-    í: 161,
-    ó: 162,
-    ú: 163,
-    ñ: 164,
-    Á: 181,
-    É: 144,
-    Í: 214,
-    Ó: 224,
-    Ú: 233,
-    Ñ: 165,
-    ü: 129,
-    Ü: 154,
-    '¿': 168,
-    '¡': 173,
-    '°': 248,
-  };
+/** Estas impresoras baratas no traen CP437: acentos salen como π. Solo ASCII. */
+function toPrinterAscii(text: string): string {
+  return text
+    .replace(/[·•]/g, '-')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '');
+}
+
+function encodePrinterText(text: string): number[] {
+  const ascii = toPrinterAscii(text);
   const bytes: number[] = [];
-  for (const char of text) {
-    if (char in map) {
-      bytes.push(map[char]);
-    } else {
-      bytes.push(char.charCodeAt(0) & 0xff);
-    }
+  for (let i = 0; i < ascii.length; i++) {
+    bytes.push(ascii.charCodeAt(i) & 0x7f);
   }
   return bytes;
 }
@@ -88,7 +75,7 @@ export function encodeEscPosReceipt(payload: ReceiptPayload): Uint8Array {
   const left = [ESC, 0x61, 0x00];
   const cut = [GS, 0x56, 0x41, 0x10];
   const lf = [0x0a];
-  const line = (text: string) => [...encodeCp437ish(text), ...lf];
+  const line = (text: string) => [...encodePrinterText(text), ...lf];
 
   const bytes: number[] = [...init];
   const push = (...parts: number[][]) => bytes.push(...parts.flat());
@@ -109,27 +96,30 @@ export function encodeEscPosKitchen(payload: KitchenTicketPayload): Uint8Array {
   const left = [ESC, 0x61, 0x00];
   const boldOn = [ESC, 0x45, 0x01];
   const boldOff = [ESC, 0x45, 0x00];
+  /** Ancho y alto x2: EXTRA, número e ítems. */
   const doubleOn = [GS, 0x21, 0x11];
-  const doubleOff = [GS, 0x21, 0x00];
-  const cut = [GS, 0x56, 0x41, 0x10];
+  const sizeOff = [GS, 0x21, 0x00];
+  const cut = [GS, 0x56, 0x41, 0x30];
   const lf = [0x0a];
-  const line = (text: string) => [...encodeCp437ish(text), ...lf];
+  const line = (text: string) => [...encodePrinterText(text), ...lf];
 
   const blocks = buildKitchenSlip(payload);
   const bytes: number[] = [];
   const push = (...parts: number[][]) => bytes.push(...parts.flat());
 
   push(init);
+  /** El corte se come el arranque del ticket: baja COMANDA un poco. */
+  push(lf, lf, lf, lf);
   for (const block of blocks) {
     switch (block.type) {
       case 'title':
         push(center, boldOn, line(block.text), boldOff);
         break;
       case 'number':
-        push(center, boldOn, doubleOn, line(block.text), doubleOff, boldOff);
+        push(center, boldOn, doubleOn, line(block.text), sizeOff, boldOff);
         break;
       case 'banner':
-        push(center, boldOn, doubleOn, line(block.text), doubleOff, boldOff);
+        push(center, boldOn, doubleOn, line(block.text), sizeOff, boldOff);
         break;
       case 'meta':
         push(center, line(block.text));
@@ -138,11 +128,13 @@ export function encodeEscPosKitchen(payload: KitchenTicketPayload): Uint8Array {
         push(left, line(ruleLine()));
         break;
       case 'item':
-        push(left);
+        push(left, doubleOn);
+        if (block.kind === 'add') push(boldOn);
         for (const row of formatItemLines(block.qty, block.name, block.kind)) {
-          if (block.kind === 'add') push(boldOn, line(row), boldOff);
-          else push(line(row));
+          push(line(row));
         }
+        if (block.kind === 'add') push(boldOff);
+        push(sizeOff, lf);
         break;
     }
   }

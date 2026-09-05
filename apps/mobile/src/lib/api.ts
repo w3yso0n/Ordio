@@ -103,6 +103,12 @@ export async function clearCashierSession() {
   await deleteSecureItem('cashierRefreshToken');
 }
 
+export async function clearDeviceSession() {
+  await clearCashierSession();
+  await deleteSecureItem('deviceToken');
+  await deleteSecureItem('refreshToken');
+}
+
 export async function ensureAccessToken(kind: TokenKind, force = false): Promise<string | null> {
   if (inflight[kind]) return inflight[kind]!;
   inflight[kind] = (async () => {

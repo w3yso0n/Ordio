@@ -14,8 +14,8 @@ const samples: Array<{ label: string; payload: KitchenTicketPayload }> = [
       createdAtIso: new Date().toISOString(),
       round: 1,
       lines: [
-        { name: 'Taco al pastor', qty: 4, kind: 'add' },
-        { name: 'Agua 600 ml', qty: 2, kind: 'add' },
+        { name: 'Taco asada', qty: 4, kind: 'add' },
+        { name: 'Agua del día', qty: 2, kind: 'add' },
       ],
     },
   },
@@ -26,7 +26,7 @@ const samples: Array<{ label: string; payload: KitchenTicketPayload }> = [
       createdAtIso: new Date().toISOString(),
       round: 2,
       tableLabel: 'Barra',
-      lines: [{ name: 'Taco al pastor', qty: 2, kind: 'add' }],
+      lines: [{ name: 'Taco arrachera', qty: 2, kind: 'add' }],
     },
   },
   {
@@ -36,8 +36,8 @@ const samples: Array<{ label: string; payload: KitchenTicketPayload }> = [
       createdAtIso: new Date().toISOString(),
       round: 3,
       lines: [
-        { name: 'Taco al pastor', qty: 1, kind: 'void' },
-        { name: 'Quesadilla', qty: 1, kind: 'add' },
+        { name: 'Taco asada', qty: 1, kind: 'void' },
+        { name: 'Quesadilla asada', qty: 1, kind: 'add' },
       ],
     },
   },

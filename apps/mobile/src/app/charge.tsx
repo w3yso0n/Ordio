@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { formatMxn, type ReceiptPayload } from '@ordio/shared';
+import { saleErrorMessage } from '../lib/network';
 import { payOrder } from '../lib/orders-api';
 import { printer, tryPrint } from '../print';
 import { clearTicket, useTicket } from '../lib/ticket-store';
@@ -27,7 +28,7 @@ export default function ChargeScreen() {
       clearTicket();
       setReceipt(result.receipt);
     } catch (err) {
-      Alert.alert('No se pudo cobrar', (err as Error).message);
+      Alert.alert('No se pudo cobrar', saleErrorMessage(err));
     } finally {
       setBusy(false);
     }

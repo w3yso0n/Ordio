@@ -7,19 +7,22 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/85c986f9-13ec-46ae-8771-d73a1c30faef"
+      "url": "https://u.expo.dev/85c986f9-13ec-46ae-8771-d73a1c30faef",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "orientation": "portrait",
     "platforms": [
       "ios",
       "android"
     ],
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "ordio",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "tech.dogix.ordio",
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/logo.png",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja.",
         "NSBluetoothPeripheralUsageDescription": "Ordio usa Bluetooth para imprimir tickets en la impresora de la caja."
@@ -35,10 +38,8 @@
         "android.permission.ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#F15A29",
+        "foregroundImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -47,15 +48,16 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#F15A29",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 180
         }
       ],
       "expo-font",
       "expo-secure-store",
       "expo-sqlite",
       "expo-web-browser",
+      "expo-updates",
       [
         "react-native-thermal-printer-driver",
         {

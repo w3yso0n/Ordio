@@ -1,5 +1,5 @@
 import type { ReceiptPayload } from '@ordio/shared';
-import { kvGetJson, kvSetJson } from './kv';
+import { kvGetJson, kvSet, kvSetJson } from './kv';
 import { pendingKitchenQty } from './order-engine';
 import type { LocalOrder } from './order-engine';
 
@@ -132,6 +132,21 @@ export function markPaidSynced(orderId: string) {
 
 export function findPaidSale(orderId: string): LocalPaidSale | null {
   return loadPaidSales().find((item) => item.orderId === orderId) ?? null;
+}
+
+export function clearLocalSaleData() {
+  kvSet(CHECKS_KEY, '');
+  kvSet(SESSION_KEY, '');
+  kvSet(DAILY_KEY, '');
+  kvSet(PAID_KEY, '');
+  kvSet('catalog', '');
+  kvSet('cashiers', '');
+  kvSet('current_ticket', '');
+}
+
+export function clearLocalSessionData() {
+  clearLocalSaleData();
+  kvSet(DEVICE_KEY, '');
 }
 
 export function checksToSummaries(orders: LocalOrder[]): OpenCheckSummary[] {

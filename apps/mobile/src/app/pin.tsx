@@ -12,6 +12,7 @@ import {
 import { saveCachedSession, saveDeviceContext } from '../lib/local-checks';
 import { isNetworkError } from '../lib/network';
 import { saveLocalPin, verifyLocalPin } from '../lib/pin-local';
+import { confirmSignOut } from '../lib/session';
 import { Button } from '../ui/button';
 import { Field } from '../ui/field';
 import { Screen } from '../ui/screen';
@@ -210,6 +211,13 @@ export default function PinScreen() {
           error={error || undefined}
         />
         <Button label={busy ? 'Entrando…' : 'Entrar'} onPress={() => void enter()} disabled={busy || !selected} />
+        <Button
+          label="Cambiar sucursal"
+          variant="ghost"
+          onPress={() =>
+            confirmSignOut('Vas a desvincular esta caja. Después escribe el código de sucursal otra vez.')
+          }
+        />
       </View>
     </Screen>
   );

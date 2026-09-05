@@ -61,6 +61,12 @@ async function sessionFromToken(): Promise<CachedSession | null> {
   };
 }
 
+const SESSION_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function apiSessionId(id: string | undefined) {
+  return id && SESSION_UUID.test(id) ? id : undefined;
+}
+
 async function currentSession(): Promise<CachedSession> {
   try {
     const session = await apiFetch('/cash/sessions/current');
@@ -73,7 +79,12 @@ async function currentSession(): Promise<CachedSession> {
       saveCachedSession(cached);
       return cached;
     }
+    throw Object.assign(
+      new Error('Hoy no hay caja abierta. Ábrela desde el panel para enviar a cocina o cobrar.'),
+      { status: 400 },
+    );
   } catch (err) {
+    if (/caja abierta/i.test(String((err as Error).message ?? ''))) throw err;
     if (!shouldQueueLocally(err) && !(err instanceof AuthError)) throw err;
   }
   const local = fallbackSession() ?? (await sessionFromToken());
@@ -87,7 +98,7 @@ function upsertBody(order: LocalOrder, session: CachedSession) {
   return {
     branchId: session.branchId,
     cashierUserId: session.openedByUserId,
-    cashRegisterSessionId: session.id,
+    cashRegisterSessionId: apiSessionId(session.id),
     clientCreatedAt: order.createdAt,
     items: order.items.map((item) => ({
       id: item.id,
@@ -255,7 +266,7 @@ export async function payOrder(
       body: JSON.stringify({
         method,
         amountCents: saved.totalCents,
-        cashRegisterSessionId: session.id,
+        cashRegisterSessionId: apiSessionId(session.id),
       }),
     });
     removeLocalCheck(saved.id);
@@ -285,7 +296,7 @@ export async function payOrder(
       body: {
         method,
         amountCents: saved.totalCents,
-        cashRegisterSessionId: session.id,
+        cashRegisterSessionId: apiSessionId(session.id),
       },
     });
     const local = applyLocalSend(saved);

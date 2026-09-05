@@ -79,3 +79,7 @@ export function queueUpdatePayload(id: string, payload: string) {
 export function queueDone(id: string) {
   sqlite.runSync(`UPDATE sync_queue SET status = 'done' WHERE id = ?`, [id]);
 }
+
+export function queueClear() {
+  sqlite.runSync(`DELETE FROM sync_queue`);
+}
